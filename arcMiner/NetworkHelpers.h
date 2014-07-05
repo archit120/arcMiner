@@ -6,6 +6,10 @@
 class NetworkHelpers
 {
 public:
+	static bool Start();
+	static bool GetIpFromUrl(char* URL, IP& ip);
+
+
 	static bool OpenConnection();
 	static bool OpenConnection(SOCKET& s, RequestTarget target);
 
@@ -14,6 +18,10 @@ public:
 
 	static bool Send(string s);
 	static bool Send(MinerClient client, string s);
+
+	//Receive is non blocking
+	static bool Receive(int bytesToReceive,string& s);
+	static bool Receive(MinerClient& client, int bytesToReceive,string& s);
 
 };
 

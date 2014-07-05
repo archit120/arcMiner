@@ -94,20 +94,30 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>L:\Users\archit\Documents\Visual Studio 2012\Projects\arcMiner\arcMiner\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="arcMiner.cpp" />
     <ClCompile Include="Client.cpp" />
+    <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="NetworkHelpers.cpp" />
+    <ClCompile Include="sha2.cpp" />
     <ClCompile Include="StratumHelpers.cpp" />
     <ClCompile Include="StratumNetwork.cpp" />
+    <ClCompile Include="StratumProtocol.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="global.h" />
+    <ClInclude Include="Helpers.h" />
     <ClInclude Include="NetworkHelpers.h" />
+    <ClInclude Include="sha2.h" />
     <ClInclude Include="StratumHelpers.h" />
     <ClInclude Include="StratumNetwork.h" />
+    <ClInclude Include="StratumProtocol.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

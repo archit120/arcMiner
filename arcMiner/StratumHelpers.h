@@ -8,8 +8,8 @@ class StratumHelpers
 public:
 	static Target TargetFromDifficulty(double difficulty);
 	static Target TargetFromDifficulty(double difficulty, Algorithms algorithm);
-	static string GenerateLoginString();
-	static string GenerateLoginString(MinerClient client);
+	static bool GenerateLoginString(string& s);
+	static bool GenerateLoginString(MinerClient client, string& s);
 
 };
 

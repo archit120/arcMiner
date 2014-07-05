@@ -45,16 +45,16 @@ Target StratumHelpers::TargetFromDifficulty(double difficulty, Algorithms algori
 	return target;
 }
 
-string StratumHelpers::GenerateLoginString()
+bool StratumHelpers::GenerateLoginString(string& s)
 {
-	return StratumHelpers::GenerateLoginString(Client);
+	return StratumHelpers::GenerateLoginString(Client, s);
 }
 
-string StratumHelpers::GenerateLoginString(MinerClient client)
+bool StratumHelpers::GenerateLoginString(MinerClient client,string &s)
 {
 	char cLogin[128];
-	sprintf(cLogin, "{\"method\": \"login\", \"params\": {\"login\": \"%s\", \"pass\": \"%s\", \"agent\": \"%s\"}, \"id\": 1}", client.Username, client.Password);
-	return string(cLogin);
-
+	sprintf(cLogin, "{\"params\": [\"%s\", \"%s\"], \"id\": 2, \"method\": \"mining.authorize\"}", client.Username, client.Password);
+	s=cLogin;
+	return true;
 }
  

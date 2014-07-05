@@ -12,6 +12,14 @@ public:
 	static bool Send(string s);
 	static bool Send(MinerClient client, string s);
 
+	static bool Receive(string& s);
+	static bool Receive(MinerClient& client, string& s);
+
+	static bool BlockReceive(string& s);
+	static bool BlockReceive(MinerClient& client, string& s);
+
 };
+
+CONST int MaxPacketSizeStratum = 1024*2*2;
 
 #endif
