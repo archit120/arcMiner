@@ -1,7 +1,7 @@
 #include "NetworkHelpers.h" //makes life easier
 #include "StratumHelpers.h"
 #include "StratumNetwork.h"
-
+#include "Helpers.h"
 
 
 bool StratumNetwork::Connect()
@@ -41,7 +41,10 @@ bool StratumNetwork::Connect(MinerClient& client)
 	client.Stratum.ENonce2Size = ENonce2.GetInt64();
 	assert((double)strlen(ENonce1.GetString())/2.0 == 0.0);
 	if(strlen(ENonce1.GetString()))
-		client.Stratum.Nonce1 = stoull(ENonce1.GetString(), nullptr, 16);
+	{
+		Helpers::HexToBinary((char *)ENonce1.GetString(), client.Stratum.Nonce1, ENonce1.GetStringLength()/2);
+		client.Stratum.Nonce1Size = ENonce1.GetStringLength() / 2;
+	}
 
 	StratumHelpers::GenerateLoginString(client, s);
 
@@ -59,6 +62,8 @@ bool StratumNetwork::Connect(MinerClient& client)
 
 	if(!doc["result"].GetBool())
 		return false;
+
+	printf("Connected to server using Stratum protocol");
 
 	return true;
 	
@@ -98,7 +103,11 @@ bool StratumNetwork::Receive(MinerClient& client, string& s)
 			break;
 
 		if(s.length() > MaxPacketSizeStratum)
+		{
+			printf("Error in StratumNetwork::Receive, packet size went above maximum limit");
+			client.Connected = false;
 			return false;
+		}
 	}
 	return true;
 }

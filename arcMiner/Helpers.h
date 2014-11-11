@@ -6,7 +6,10 @@
 class Helpers
 {
 public:
-	static bool GenerateMerkleRoot(vector<Hash> TransactionHashes, uint8_t* Coinbase, unsigned int CoinbaseLength, Hash& MerkleRoot);
+	static bool HexToBinary(char* hex, char* binary, size_t len);
+	static bool BinaryToHex(char* hex, char* binary, size_t len);
+	static uint32_t BigEndian32Decode(const void *buf);
+	static bool GenerateExtraNonce( char* nonce, size_t len);
 };
 
 #endif

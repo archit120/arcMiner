@@ -108,9 +108,11 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 		signed int r = recv(client.ClientSocket, c, toReceive, 0);
 		if( r <= 0 )
 		{
+			int e = WSAGetLastError();
 			// receive error, is it a real error or just because of non blocking sockets?
-			if( WSAGetLastError() != WSAEWOULDBLOCK )
+			if( e != WSAEWOULDBLOCK )
 			{
+				printf("NetworkHelpers::Receive failed with %d", e);
 				client.Connected = false;
 				return false;
 			}

@@ -10,7 +10,16 @@ public:
 	static bool Login();
 	static bool Login(MinerClient& client);
 
-	static void StratumThread(WorkBlob& work);
+	static bool HandleMethod(string s);
+	static bool HandleMethod(MinerClient& client, string s);
+
+	static void StratumThreadStarter();
+	static void StratumThread(LPVOID lclient);
+
+	static bool HandleShares();
+	static bool HandleShares(MinerClient& client);
+
+	static bool GetWork(WorkBlob& work);
 	static bool GetWork(MinerClient& client, WorkBlob& work);
 };
 

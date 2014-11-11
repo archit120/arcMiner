@@ -1,16 +1,82 @@
 #include "Helpers.h"
 
-
-bool Helpers::GenerateMerkleRoot(vector<Hash> TransactionHashes, uint8_t* Coinbase, unsigned int CoinbaseLength , Hash& MerkleRoot)
+bool Helpers::HexToBinary(char* hex, char* binary, size_t len)
 {
-	uint8_t merkleRoot[64];
-	sha256d(Coinbase, CoinbaseLength, merkleRoot);
-	for(int i = 0; i < TransactionHashes.size(); i++)
-	{
-		memcpy(merkleRoot+32, TransactionHashes[i].data, 32);
-		sha256d(merkleRoot, 64, merkleRoot);
+	char hex_byte[3];
+	char *ep;
+
+	hex_byte[2] = '\0';
+
+	while (*hex && len) {
+		if (!hex[1]) {
+			cout << "Helpers::HexToBinary received incomplete hex string";
+			return false;
+		}
+		hex_byte[0] = hex[0];
+		hex_byte[1] = hex[1];
+		*binary = (unsigned char) strtol(hex_byte, &ep, 16);
+		if (*ep) {
+			cout << "Helpers::HexToBinary failed on '" << hex_byte << "'";
+			return false;
+		}
+		binary++;
+		hex += 2;
+		len--;
 	}
-	memcpy(MerkleRoot.data, merkleRoot, 32);
+
+	return (len == 0 && *hex == 0) ? true : false;
+}
+
+
+bool Helpers::BinaryToHex(char* hex, char* binary, size_t len)
+{
+	char hex_byte[3];
+
+	while (len) {
+		uint8_t a = *((uint8_t*)binary);
+		
+
+
+		if (snprintf(hex_byte, 3, "%x", a) > 1)
+		{
+			hex[0] = hex_byte[0];
+			hex[1] = hex_byte[1];
+		}
+		else
+		{
+			hex[0] = '0';
+			hex[1] = hex_byte[0];
+		}
+
+		binary++;
+		hex += 2;
+		len--;
+	}
+
+	hex[0] = '\0';
 
 	return true;
+}
+
+
+uint32_t Helpers::BigEndian32Decode(const void *buf)
+{
+	const uint8_t *p = (const uint8_t *)buf;
+
+	return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
+}
+
+bool Helpers::GenerateExtraNonce(char* nonce, size_t len)
+{
+	if(4-len < 0 )
+		return false;
+
+	memset(nonce, 0, len);
+
+	uint32_t a = UniqueGenerator;
+	UniqueGenerator++;
+	memcpy(nonce + len - 4, &a, 4);
+
+	return true;
+
 }
