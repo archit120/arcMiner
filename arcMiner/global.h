@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <time.h>
+#include <map>
+#include <thread>
 
 #pragma comment(lib,"Ws2_32.lib")
 #include <Winsock2.h>
@@ -16,9 +18,12 @@
 
 #include "sha2.h"
 
+#define MinerVersion "arcMiner alpha"
+
 using namespace std;
 using namespace rapidjson;
 
+//Stupid hack?!
 #define snprintf c99_snprintf
 
 inline int c99_vsnprintf(char* str, size_t size, const char* format, va_list ap)
@@ -70,7 +75,7 @@ struct IP
 struct RequestTarget
 {
 	IP Ip;
-	int port;
+	volatile int port;
 };
 
 struct StratumShare
@@ -82,9 +87,14 @@ struct StratumClient
 {
 	size_t ENonce2Size;
 	char Nonce1[8];
-	int Nonce1Size;
+	volatile int Nonce1Size;
 	CRITICAL_SECTION cs_share;
 	vector<StratumShare> Shares;
+	volatile double Difficulty;
+	volatile double NextDifficulty;
+	Target CurrentTarget;
+	volatile int Id;
+	map<int, string> IdMap; //Used for mathing returns of function calls
 };
 
 struct Hash
@@ -111,9 +121,9 @@ struct Job
 struct WorkBlob
 {
 	char Blob[128];
-	int Length;
-	int NoncePointer;
-	size_t NonceSize;
+	volatile int Length;
+	volatile int NoncePointer;
+	volatile size_t NonceSize;
 };
 
 struct MinerClient
@@ -122,7 +132,8 @@ struct MinerClient
 	 SOCKET ClientSocket;
 	 string Username;
 	 string Password;
-	 bool Connected;
+	 volatile bool Connected;
+	 volatile bool LoggedIn;
 	 RequestTarget Target;
 	 StratumClient Stratum;
 	 WorkBlob Work;
@@ -130,7 +141,7 @@ struct MinerClient
 	 CRITICAL_SECTION cs_Job;
 };
 
-extern MinerClient Client;
+extern MinerClient GlobalClient;
 extern volatile uint32_t UniqueGenerator;
 extern volatile uint64_t TotalHashCount;
 extern uint32 MiningStartTime;

@@ -32,7 +32,7 @@ bool NetworkHelpers::GetIpFromUrl(char* URL, IP& ip)
 
 bool NetworkHelpers::OpenConnection()
 {
-	return OpenConnection(Client.ClientSocket, Client.Target);
+	return OpenConnection(GlobalClient.ClientSocket, GlobalClient.Target);
 }
 bool NetworkHelpers::OpenConnection(SOCKET& s, RequestTarget target)
 {
@@ -59,7 +59,7 @@ bool NetworkHelpers::OpenConnection(SOCKET& s, RequestTarget target)
 
 bool NetworkHelpers::Connect()
 {
-	return Connect(Client);
+	return Connect(GlobalClient);
 }
 bool NetworkHelpers::Connect(MinerClient& client)
 {
@@ -72,7 +72,7 @@ bool NetworkHelpers::Connect(MinerClient& client)
 	unsigned int cbRet;
 	WSAIoctl(client.ClientSocket, FIONBIO, &nonblocking, sizeof(nonblocking), NULL, 0, (LPDWORD)&cbRet, NULL, NULL);
 
-	Client.Connected = true;
+	client.Connected = true;
 	
 	return true;
 }
@@ -80,7 +80,7 @@ bool NetworkHelpers::Connect(MinerClient& client)
 
 bool NetworkHelpers::Send(string s)
 {
-	return NetworkHelpers::Send(Client, s);
+	return NetworkHelpers::Send(GlobalClient, s);
 }
 
 bool NetworkHelpers::Send(MinerClient client, string s)
@@ -94,7 +94,7 @@ bool NetworkHelpers::Send(MinerClient client, string s)
 
 bool NetworkHelpers::Receive(int bytesToReceive, string& s)
 {
-	return NetworkHelpers::Receive(Client, bytesToReceive, s);
+	return NetworkHelpers::Receive(GlobalClient, bytesToReceive, s);
 }
 
 bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
@@ -114,6 +114,7 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 			{
 				printf("NetworkHelpers::Receive failed with %d", e);
 				client.Connected = false;
+				client.LoggedIn = false;
 				return false;
 			}
 			return true;

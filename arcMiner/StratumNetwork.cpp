@@ -6,7 +6,7 @@
 
 bool StratumNetwork::Connect()
 {
-	return Connect(Client);
+	return Connect(GlobalClient);
 }
 
 
@@ -17,6 +17,7 @@ bool StratumNetwork::Connect(MinerClient& client)
 
 	string s = "{\"id\": 1, \"method\": \"mining.subscribe\", \"params\": []}";
 
+	client.Stratum.Id = 2;
 	if(!StratumNetwork::Send(client, s))
 		return false;
 	
@@ -39,18 +40,26 @@ bool StratumNetwork::Connect(MinerClient& client)
 	assert(ENonce2.IsNumber());
 
 	client.Stratum.ENonce2Size = ENonce2.GetInt64();
-	assert((double)strlen(ENonce1.GetString())/2.0 == 0.0);
+	//assert((double)strlen(ENonce1.GetString())/2.0 == 0.0);
 	if(strlen(ENonce1.GetString()))
 	{
-		Helpers::HexToBinary((char *)ENonce1.GetString(), client.Stratum.Nonce1, ENonce1.GetStringLength()/2);
+		//Store the Nonce1 
+ 		Helpers::HexToBinary((char *)ENonce1.GetString(), client.Stratum.Nonce1, ENonce1.GetStringLength()/2);
 		client.Stratum.Nonce1Size = ENonce1.GetStringLength() / 2;
+		
 	}
-
+	//Send the login command
 	StratumHelpers::GenerateLoginString(client, s);
 
 	if(!StratumNetwork::Send(client, s))
 		return false;
 
+	cout << "Login string sent, starting listener thread now!" << endl;
+
+	return true;
+
+	
+	/*
 	if(!StratumNetwork::BlockReceive(client, s))
 		return false;
 
@@ -65,13 +74,13 @@ bool StratumNetwork::Connect(MinerClient& client)
 
 	printf("Connected to server using Stratum protocol");
 
-	return true;
+	return true;*/
 	
 }
 
 bool StratumNetwork::Send(string s)
 {
-	return StratumNetwork::Send(Client, s);
+	return StratumNetwork::Send(GlobalClient, s);
 }
 
 bool StratumNetwork::Send(MinerClient client, string s)
@@ -83,7 +92,7 @@ bool StratumNetwork::Send(MinerClient client, string s)
 
 bool StratumNetwork::Receive(string& s)
 {
-	return StratumNetwork::Receive(Client, s);
+	return StratumNetwork::Receive(GlobalClient, s);
 }
 
 bool StratumNetwork::Receive(MinerClient& client, string& s)
@@ -106,6 +115,7 @@ bool StratumNetwork::Receive(MinerClient& client, string& s)
 		{
 			printf("Error in StratumNetwork::Receive, packet size went above maximum limit");
 			client.Connected = false;
+			client.LoggedIn = false;
 			return false;
 		}
 	}
@@ -114,7 +124,7 @@ bool StratumNetwork::Receive(MinerClient& client, string& s)
 
 bool StratumNetwork::BlockReceive(string& s)
 {
-	return StratumNetwork::BlockReceive(Client, s);
+	return StratumNetwork::BlockReceive(GlobalClient, s);
 }
 
 bool StratumNetwork::BlockReceive(MinerClient& client, string& s)

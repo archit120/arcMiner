@@ -14,7 +14,8 @@ public:
 	static bool HandleMethod(MinerClient& client, string s);
 
 	static void StratumThreadStarter();
-	static void StratumThread(LPVOID lclient);
+	static void StratumThreadStarter(MinerClient& client);
+	static void StratumThread(MinerClient &lclient);
 
 	static bool HandleShares();
 	static bool HandleShares(MinerClient& client);

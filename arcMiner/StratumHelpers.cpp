@@ -1,5 +1,6 @@
 #include "StratumHelpers.h"
 #include "Helpers.h"
+#include "StratumNetwork.h"
 
 void StratumHelpers::DecodeNetworkInteger(char* str, char* destination)
 {
@@ -11,7 +12,7 @@ void StratumHelpers::DecodeNetworkInteger(char* str, char* destination)
 
 Target StratumHelpers::TargetFromDifficulty(double difficulty)
 {
-	return TargetFromDifficulty(difficulty, Client.Algorithm);
+	return TargetFromDifficulty(difficulty, GlobalClient.Algorithm);
 }
 
 Target StratumHelpers::TargetFromDifficulty(double difficulty, Algorithms algorithm)
@@ -56,14 +57,16 @@ Target StratumHelpers::TargetFromDifficulty(double difficulty, Algorithms algori
 
 bool StratumHelpers::GenerateLoginString(string& s)
 {
-	return StratumHelpers::GenerateLoginString(Client, s);
+	return StratumHelpers::GenerateLoginString(GlobalClient, s);
 }
 
-bool StratumHelpers::GenerateLoginString(MinerClient client,string &s)
+bool StratumHelpers::GenerateLoginString(MinerClient& client,string &s)
 {
 	char cLogin[128];
-	sprintf(cLogin, "{\"params\": [\"%s\", \"%s\"], \"id\": 2, \"method\": \"mining.authorize\"}", client.Username, client.Password);
+	sprintf(cLogin, "{\"params\": [\"%s\", \"%s\"], \"id\": %u, \"method\": \"mining.authorize\"}", client.Username, client.Password, client.Stratum.Id);
 	s=cLogin;
+	client.Stratum.IdMap.insert(pair<int, string>(client.Stratum.Id, "mining.authorize"));
+	client.Stratum.Id++;
 	return true;
 }
  
@@ -145,4 +148,42 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 
 	
 	return true;
+}
+ 
+bool StratumHelpers::StratumSetDifficulty(MinerClient& client, Document& s)
+{
+	Value& params = s["params"];
+	client.Stratum.NextDifficulty = params[0u].GetDouble();
+	return true;
+}
+
+bool StratumHelpers::StratumGetVersion(MinerClient& client, Document& s)
+{
+	char buffer[128];
+	sprintf(buffer, "{\"id\":\"%d\", \"error\":null, \"result\":\"%s\"}", s["id"].GetInt(), MinerVersion);
+	return StratumNetwork::Send(string(buffer));
+}
+
+bool StratumHelpers::StratumShowMessage(MinerClient& client, Document& s)
+{
+	printf("Message from server: %s\n", s["params"][0u].GetString());
+	char buffer[128];
+	sprintf(buffer, "{\"id\":\"%d\", \"error\":null, \"result\":true}", s["id"].GetInt());
+	return StratumNetwork::Send(string(buffer));
+
+}
+
+bool StratumHelpers::StratumHandleLogin(MinerClient& client, Document& s)
+{
+	printf("Recevied response for login request");
+	if (s["result"].GetBool() == true && s["error"].IsNull() == true)
+	{
+		printf("Successfully logged in!");
+		//Go through the commands received before we were logged in?
+		client.Connected = true;
+		client.LoggedIn = true;
+
+		return true;
+	}
+	return false;
 }
