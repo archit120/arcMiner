@@ -44,8 +44,7 @@
     <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -93,32 +92,41 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>F:\Users\archit\Documents\Visual Studio 2012\Projects\arcMiner\arcMiner\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Optimization>MaxSpeed</Optimization>
+      <AdditionalIncludeDirectories>C:\Users\archit120\Documents\Visual Studio 2013\Projects\arcMiner\arcMiner\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="arcMiner.cpp" />
+    <ClCompile Include="Crypto\scrypt.c" />
+    <ClCompile Include="Crypto\sha2.c" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="NetworkHelpers.cpp" />
-    <ClCompile Include="sha2.cpp" />
+    <ClCompile Include="ScryptCPUMiner.cpp" />
     <ClCompile Include="StratumHelpers.cpp" />
     <ClCompile Include="StratumNetwork.cpp" />
     <ClCompile Include="StratumProtocol.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Crypto\CryptConfig.h" />
     <ClInclude Include="global.h" />
     <ClInclude Include="Helpers.h" />
     <ClInclude Include="NetworkHelpers.h" />
-    <ClInclude Include="sha2.h" />
+    <ClInclude Include="ScryptCPUMiner.h" />
     <ClInclude Include="StratumHelpers.h" />
     <ClInclude Include="StratumNetwork.h" />
     <ClInclude Include="StratumProtocol.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Object Include="Assembly\scrypt-x64.obj" />
+    <Object Include="Assembly\sha2-x64.obj" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

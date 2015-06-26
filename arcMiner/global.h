@@ -16,9 +16,17 @@
 #include <rapidjson\rapidjson.h>
 #include <rapidjson\document.h>
 
-#include "sha2.h"
+/*#include "crypto\sha2.h"
+#include "crypto\scrypt.h"*/
+
+#include "Crypto\CryptConfig.h"
+
 
 #define MinerVersion "arcMiner alpha"
+
+
+//Needer for Pooler's cpuminer code
+
 
 using namespace std;
 using namespace rapidjson;
@@ -51,6 +59,10 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 	return count;
 }
 
+enum Protocol{
+	Stratum,
+	Xpt
+};
 
 enum Algorithms
 {
@@ -80,7 +92,10 @@ struct RequestTarget
 
 struct StratumShare
 {
-
+	string Id;
+	char ENonce2[4];
+	char Nonce[4];
+	char Ntime[4];
 };
 
 struct StratumClient
@@ -92,7 +107,6 @@ struct StratumClient
 	vector<StratumShare> Shares;
 	volatile double Difficulty;
 	volatile double NextDifficulty;
-	Target CurrentTarget;
 	volatile int Id;
 	map<int, string> IdMap; //Used for mathing returns of function calls
 };
@@ -106,6 +120,8 @@ struct Job
 {
 	string Id;
 	Hash PrevHash;
+	Hash MerkleRoot;
+	Target ShareTarget;
 	size_t CoinbaseSize;
 	unsigned char *Coinbase;
 	unsigned char *ENonce2;
@@ -121,9 +137,19 @@ struct Job
 struct WorkBlob
 {
 	char Blob[128];
+	Target ShareTarget;
 	volatile int Length;
-	volatile int NoncePointer;
+
+	int* NoncePointer;
 	volatile size_t NonceSize;
+
+	int* NtimePointer;
+	volatile size_t NtimeSize;
+
+	char ENonce2[4];
+	string Id;
+
+
 };
 
 struct MinerClient
@@ -138,12 +164,19 @@ struct MinerClient
 	 StratumClient Stratum;
 	 WorkBlob Work;
 	 Job CurrentJob;
+	 Protocol CurrentProtocol;
 	 CRITICAL_SECTION cs_Job;
+	 volatile uint64_t TotalHashCount;
+	 volatile uint64_t TotalCollisionCount;
+	 volatile uint64_t UniqueGenerator;
+	 volatile uint32_t MiningStartTime;
+
 };
 
 extern MinerClient GlobalClient;
-extern volatile uint32_t UniqueGenerator;
-extern volatile uint64_t TotalHashCount;
-extern uint32 MiningStartTime;
+extern volatile uint32_t GlobalUniqueGenerator;
+extern volatile uint64_t GlobalTotalHashCount;
+extern volatile uint64_t GlobalTotalCollisionCount;
+extern uint32_t GlobalMiningStartTime;
 #endif
 

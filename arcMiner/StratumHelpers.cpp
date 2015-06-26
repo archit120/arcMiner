@@ -17,10 +17,17 @@ Target StratumHelpers::TargetFromDifficulty(double difficulty)
 
 Target StratumHelpers::TargetFromDifficulty(double difficulty, Algorithms algorithm)
 {
+	Target target;
+	uint32_t d = difficulty;
+	uint64_t a = 0xFFFF00000000;
+	uint64_t b = a / difficulty;
 	switch (algorithm)
 	{
 	case Scrypt:
-		difficulty =  difficulty/655360.0;
+		memset(target.data, 0, 32);
+		((uint64_t*)target.data)[3] = b;
+		return target;
+		//difficulty =  difficulty/655360.0;
 		break;
 	case SHA256:
 	case Keccak:
@@ -32,7 +39,6 @@ Target StratumHelpers::TargetFromDifficulty(double difficulty, Algorithms algori
 		throw invalid_argument("Algorithm type is unknown.");
 		break;
 	}
-	Target target;
 		
 	uint64_t m;
 	int k;
@@ -73,12 +79,13 @@ bool StratumHelpers::GenerateLoginString(MinerClient& client,string &s)
 bool StratumHelpers::GenerateMerkleRoot(vector<Hash> TransactionHashes, uint8_t* Coinbase, unsigned int CoinbaseLength , Hash& MerkleRoot)
 {
 	uint8_t merkleRoot[64];
-	sha256d(Coinbase, CoinbaseLength, merkleRoot);
+
+	sha256d(merkleRoot, Coinbase, CoinbaseLength);
 
 	for(int i = 0; i < TransactionHashes.size(); i++)
 	{
 		memcpy(merkleRoot+32, TransactionHashes[i].data, 32);
-		sha256d(merkleRoot, 64, merkleRoot);
+		sha256d(merkleRoot, merkleRoot, 64);
 	}
 
 	//Reverse endiannness
@@ -99,9 +106,12 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 	{
 		printf("Error in StratumHelpers::StratumNotify, invalid number of parameters supplied by server.");
 	}
-	//EnterCriticalSection(&client.cs_Job);
+	EnterCriticalSection(&client.cs_Job);
 	client.CurrentJob.CoinbaseSize = 2;
 	client.CurrentJob.Id = params[0u].GetString();
+
+	client.Stratum.Difficulty = client.Stratum.NextDifficulty;
+	client.CurrentJob.ShareTarget = StratumHelpers::TargetFromDifficulty(client.Stratum.Difficulty, client.Algorithm);
 
 	Helpers::HexToBinary((char *)params[1].GetString(), (char *)client.CurrentJob.PrevHash.data, params[1].GetStringLength()/2);
 
@@ -111,19 +121,23 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 	char* cb1 = (char *)malloc(cb1length);
 	char* cb2 = (char *)malloc(cb2length);
 
+
 	Helpers::HexToBinary((char *)params[2].GetString(), cb1, cb1length);
 	Helpers::HexToBinary((char *)params[3].GetString(), cb2, cb2length);
-
+	if (client.CurrentJob.Coinbase != 0x0)
+		free(client.CurrentJob.Coinbase);
 	char* coinbase = (char *)malloc(cb1length + cb2length + client.Stratum.Nonce1Size + client.Stratum.ENonce2Size + cb2length);
 
 	memcpy(coinbase, cb1, cb1length);
 	memcpy(coinbase + cb1length, client.Stratum.Nonce1, client.Stratum.Nonce1Size);
 	memcpy(coinbase + cb1length + client.Stratum.Nonce1Size + client.Stratum.ENonce2Size, cb2, cb2length); //Pregenerated coinbase but leave bytes in between for enonce2
 
+	free(cb1);
+	free(cb2);
+
 	client.CurrentJob.ENonce2 = (unsigned char*) coinbase + cb1length + client.Stratum.Nonce1Size;
 	client.CurrentJob.Coinbase = (unsigned char*) coinbase;
 	client.CurrentJob.CoinbaseSize = cb1length + client.Stratum.Nonce1Size + client.Stratum.ENonce2Size + cb2length;
-	
 	StratumHelpers::DecodeNetworkInteger((char*)params[6].GetString(), (char *)client.CurrentJob.Nbits);
 	StratumHelpers::DecodeNetworkInteger((char*)params[7].GetString(), (char *)client.CurrentJob.Ntime);
 	Helpers::HexToBinary((char *)params[1].GetString(), (char *)client.CurrentJob.PrevHash.data, params[1].GetStringLength()/2);
@@ -135,8 +149,9 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 		((uint32_t*)client.CurrentJob.PrevHash.data)[i] = b;
 	}
 
-	StratumHelpers::DecodeNetworkInteger((char*)params[5].GetString(), (char *)client.CurrentJob.Version);
 
+	StratumHelpers::DecodeNetworkInteger((char*)params[5].GetString(), (char *)client.CurrentJob.Version);
+	client.CurrentJob.TransactionHashes.clear();
 	for (int i = 0u; i < params[4].Size(); i++)
 	{
 		char c[32];
@@ -146,7 +161,7 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 		client.CurrentJob.TransactionHashes.push_back(h);
 	}
 
-	
+	LeaveCriticalSection(&client.cs_Job);
 	return true;
 }
  
@@ -161,7 +176,7 @@ bool StratumHelpers::StratumGetVersion(MinerClient& client, Document& s)
 {
 	char buffer[128];
 	sprintf(buffer, "{\"id\":\"%d\", \"error\":null, \"result\":\"%s\"}", s["id"].GetInt(), MinerVersion);
-	return StratumNetwork::Send(string(buffer));
+	return StratumNetwork::Send(client, string(buffer));
 }
 
 bool StratumHelpers::StratumShowMessage(MinerClient& client, Document& s)
@@ -175,10 +190,10 @@ bool StratumHelpers::StratumShowMessage(MinerClient& client, Document& s)
 
 bool StratumHelpers::StratumHandleLogin(MinerClient& client, Document& s)
 {
-	printf("Recevied response for login request");
+	printf("Recevied response for login request\n");
 	if (s["result"].GetBool() == true && s["error"].IsNull() == true)
 	{
-		printf("Successfully logged in!");
+		printf("Successfully logged in!\n");
 		//Go through the commands received before we were logged in?
 		client.Connected = true;
 		client.LoggedIn = true;

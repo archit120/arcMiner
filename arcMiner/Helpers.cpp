@@ -1,5 +1,16 @@
 #include "Helpers.h"
 
+
+bool Helpers::PrintBinaryInHex(char* binary, size_t len)
+{
+	char* hex = (char *)malloc(len * 2 + 1);
+	Helpers::BinaryToHex(hex, binary, len);
+	printf(hex);
+	printf("\n");
+	free(hex);
+	return true;
+}
+
 bool Helpers::HexToBinary(char* hex, char* binary, size_t len)
 {
 	char hex_byte[3];
@@ -73,8 +84,8 @@ bool Helpers::GenerateExtraNonce(char* nonce, size_t len)
 
 	memset(nonce, 0, len);
 
-	uint32_t a = UniqueGenerator;
-	UniqueGenerator++;
+	uint32_t a = GlobalUniqueGenerator;
+	GlobalUniqueGenerator++;
 	memcpy(nonce + len - 4, &a, 4);
 
 	return true;

@@ -85,7 +85,8 @@ bool NetworkHelpers::Send(string s)
 
 bool NetworkHelpers::Send(MinerClient client, string s)
 {
-	if(send(client.ClientSocket, s.data(), s.length(), 0))
+	int bytes = send(client.ClientSocket, s.c_str(), s.length(), 0);
+	if(bytes> 0)
 		return true;
 	cout << "NetworkHelpers::Send failed with " << WSAGetLastError() << endl;
 	return false;

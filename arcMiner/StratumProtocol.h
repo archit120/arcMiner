@@ -17,6 +17,8 @@ public:
 	static void StratumThreadStarter(MinerClient& client);
 	static void StratumThread(MinerClient &lclient);
 
+	static bool AddShares(StratumShare &share);
+	static bool AddShares(StratumShare &share, MinerClient &client);
 	static bool HandleShares();
 	static bool HandleShares(MinerClient& client);
 
