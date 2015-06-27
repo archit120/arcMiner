@@ -13,6 +13,17 @@ arcMiner is a new miner built form the base up in C++. It has been designed to b
 - support momentum,x11,keccak etc
 - proper logging support
 
+###how to use
+- -o, -O                        The miner will connect to this url. You can specify a port after the url using -o url:port
+- -u                            The username (workername) used for login
+- -p   							The password used for login
+- -t <num>                      The number of threads for mining (default is set to number of cores)
+-  -a <algo>                     Name of the mining POW in case of stratum server. Possible values - scrypt
+- -pr <protocol>                Server connection protocol to be used. Possible values - stratum
+
+Example usage:
+	arcMiner.exe -o http://poolurl.com:10034 -u workername.pts_1 -p workerpass -t 4 -pr stratum -a scrypt
+
 Credits: archit, pooler(scrypt mining code), jh00(inspired from xptMiner)
 
 ###How to compile
