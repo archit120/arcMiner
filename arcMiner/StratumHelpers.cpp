@@ -1,4 +1,5 @@
 #include "StratumHelpers.h"
+#include "StratumProtocol.h"
 #include "Helpers.h"
 #include "StratumNetwork.h"
 
@@ -101,6 +102,7 @@ bool StratumHelpers::GenerateMerkleRoot(vector<Hash> TransactionHashes, uint8_t*
 
 bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 {
+	printf("StratumHelpers::StratumNotify : New job received!\n");
 	Value& params = s["params"];
 	if(params.Size() != 9)
 	{
@@ -191,14 +193,46 @@ bool StratumHelpers::StratumShowMessage(MinerClient& client, Document& s)
 bool StratumHelpers::StratumHandleLogin(MinerClient& client, Document& s)
 {
 	printf("Recevied response for login request\n");
-	if (s["result"].GetBool() == true && s["error"].IsNull() == true)
+	if (s["result"].GetBool() == true)
 	{
 		printf("Successfully logged in!\n");
 		//Go through the commands received before we were logged in?
 		client.Connected = true;
 		client.LoggedIn = true;
 
+		for (int i = 0; i < client.Stratum.PendingNotifications.size(); i++)
+		{
+			StratumProtocol::HandleMethod(client, client.Stratum.PendingNotifications[i]);
+		}
+		client.Stratum.PendingNotifications.clear();
 		return true;
+	}
+	else
+	{
+		printf("Could not log in!\n");
+		//Go through the commands received before we were logged in?
+		client.Connected = false;
+		client.LoggedIn = false;
+		client.LogInFailed = true;
+		return false;
+	}
+	return false;
+}
+
+bool StratumHelpers::StratumHandleShareResponse(MinerClient& client, Document& s)
+{
+	printf("Recevied response for share submit\n");
+	if (s["result"].GetBool() == true)
+	{
+		printf("Share successfully submited!\n");
+		client.SharesAccepted++;
+		return true;
+	}
+	else
+	{
+		printf("Share rejected!\n");
+		client.SharesRejected++;
+		return false;
 	}
 	return false;
 }

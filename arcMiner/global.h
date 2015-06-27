@@ -21,6 +21,7 @@
 
 #include "Crypto\CryptConfig.h"
 
+#include "AppLog.h"
 
 #define MinerVersion "arcMiner alpha"
 
@@ -109,6 +110,7 @@ struct StratumClient
 	volatile double NextDifficulty;
 	volatile int Id;
 	map<int, string> IdMap; //Used for mathing returns of function calls
+	vector<string> PendingNotifications; // Some stratum servers send messages before autorization
 };
 
 struct Hash
@@ -120,7 +122,7 @@ struct Job
 {
 	string Id;
 	Hash PrevHash;
-	Hash MerkleRoot;
+	//Hash MerkleRoot;
 	Target ShareTarget;
 	size_t CoinbaseSize;
 	unsigned char *Coinbase;
@@ -160,6 +162,8 @@ struct MinerClient
 	 string Password;
 	 volatile bool Connected;
 	 volatile bool LoggedIn;
+	 volatile bool WorkAvailaible; 
+	 volatile bool LogInFailed; 
 	 RequestTarget Target;
 	 StratumClient Stratum;
 	 WorkBlob Work;
@@ -169,14 +173,16 @@ struct MinerClient
 	 volatile uint64_t TotalHashCount;
 	 volatile uint64_t TotalCollisionCount;
 	 volatile uint64_t UniqueGenerator;
-	 volatile uint32_t MiningStartTime;
+	 volatile uint64_t MiningStartTime;
 
+	 volatile uint32_t SharesAccepted;
+	 volatile uint32_t SharesRejected;
 };
 
 extern MinerClient GlobalClient;
 extern volatile uint32_t GlobalUniqueGenerator;
 extern volatile uint64_t GlobalTotalHashCount;
 extern volatile uint64_t GlobalTotalCollisionCount;
-extern uint32_t GlobalMiningStartTime;
+extern uint64_t GlobalMiningStartTime;
 #endif
 

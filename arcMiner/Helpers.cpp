@@ -77,6 +77,14 @@ uint32_t Helpers::BigEndian32Decode(const void *buf)
 	return ((p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
 }
 
+void Helpers::BigEndian32Encode( char  *pp, uint32_t x)
+{
+	uint8_t *p = (uint8_t *)pp;
+	p[3] = x & 0xff;
+	p[2] = (x >> 8) & 0xff;
+	p[1] = (x >> 16) & 0xff;
+	p[0] = (x >> 24) & 0xff;
+}
 bool Helpers::GenerateExtraNonce(char* nonce, size_t len)
 {
 	if(4-len < 0 )

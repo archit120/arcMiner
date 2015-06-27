@@ -113,7 +113,7 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 			// receive error, is it a real error or just because of non blocking sockets?
 			if( e != WSAEWOULDBLOCK )
 			{
-				printf("NetworkHelpers::Receive failed with %d", e);
+				printf("NetworkHelpers::Receive failed with %d\n", e);
 				client.Connected = false;
 				client.LoggedIn = false;
 				return false;

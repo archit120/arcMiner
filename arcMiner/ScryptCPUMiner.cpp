@@ -8,6 +8,7 @@ bool ScryptCPUMiner::BlockMine(MinerClient &client)
 {
 	WorkBlob work;
 	StratumProtocol::GetWork(client, work);
+
 	return BlockMine2(client, work);
 }
 
@@ -22,6 +23,10 @@ bool BlockMine2(MinerClient &client, WorkBlob &work)
 	uint32_t shareCompare = work.ShareTarget.data[7];
 	//shareCompare = Helpers::BigEndian32Decode(&shareCompare);
 	uint32_t nonce = 0;
+	for (int i = 0; i < 20; i++) //Weird endian adjustment needed for pooler's code
+	{
+		((int*)work.Blob)[i] = Helpers::BigEndian32Decode(&((int*)work.Blob)[i]);
+	}
 
 	int throughput = scrypt_best_throughput();
 
@@ -61,7 +66,7 @@ bool BlockMine2(MinerClient &client, WorkBlob &work)
 			else
 			if (throughput == 12)
 				scrypt_1024_1_1_256_12way(data, hash, midstate, ScratchPad, 1024);
-			else
+			
 			if (throughput == 24)
 				scrypt_1024_1_1_256_24way(data, hash, midstate, ScratchPad, 1024);
 			else
@@ -73,15 +78,17 @@ bool BlockMine2(MinerClient &client, WorkBlob &work)
 			for (int i = 0; i < throughput; i++) {
 				if (hash[i * 8 + 7] <= shareCompare) {
 					printf("We found a share submitting!\n");
-
-					if (client.CurrentProtocol = Stratum)
+					if (client.CurrentProtocol == Stratum)
 					{
 						StratumShare share;
+						//Helpers::BigEndian32Encode(share.Nonce, data[i * 20 + 19]);
+						//Helpers::BigEndian32Encode(share.Ntime, *work.NtimePointer);
+						//Helpers::BigEndian32Encode(share.ENonce2, *work.ENonce2);
 						memcpy(share.Nonce, &(data[i * 20 + 19]), 4);
 						memcpy(share.Ntime, work.NtimePointer, 4);
 						memcpy(share.ENonce2, work.ENonce2, 4);
 						share.Id = work.Id;
-						StratumProtocol::AddShares(share);
+						StratumProtocol::AddShares( share, client);
 					}
 				}
 			}

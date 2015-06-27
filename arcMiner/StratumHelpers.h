@@ -20,6 +20,7 @@ public:
 	static bool StratumShowMessage(MinerClient& client, Document& s);
 
 	static bool StratumHandleLogin(MinerClient& client, Document& s);
+	static bool StratumHandleShareResponse(MinerClient& client, Document& s);
 	
 	static void DecodeNetworkInteger(char* str, char* destination);
 

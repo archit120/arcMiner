@@ -12,6 +12,20 @@ bool StratumNetwork::Connect()
 
 bool StratumNetwork::Connect(MinerClient& client)
 {
+	//Reset client's properties
+
+	client.TotalHashCount = 0;
+	client.UniqueGenerator = 0;
+	client.Work = {};
+	client.MiningStartTime = -1;
+	client.Stratum = {};
+	client.CurrentJob = {};
+	client.WorkAvailaible = false;
+
+	InitializeCriticalSection(&client.cs_Job);
+	InitializeCriticalSection(&client.Stratum.cs_share);
+
+
 	if(!NetworkHelpers::Connect(client))
 		return false;
 

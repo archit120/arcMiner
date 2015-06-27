@@ -9,10 +9,7 @@ bool StratumProtocol::Login()
 }
 bool StratumProtocol::Login(MinerClient& client)
 {
-	StratumNetwork::Connect(client);
-	InitializeCriticalSection(&client.cs_Job);
-	InitializeCriticalSection(&client.Stratum.cs_share);
-	return true;
+	return StratumNetwork::Connect(client);
 }
 
 bool StratumProtocol::AddShares(StratumShare &share)
@@ -87,9 +84,7 @@ bool StratumProtocol::GetWork(MinerClient& client, WorkBlob& work)
 	memcpy(work.ENonce2, client.CurrentJob.ENonce2, client.Stratum.ENonce2Size);
 	Hash merkleRoot;
 	StratumHelpers::GenerateMerkleRoot(client.CurrentJob.TransactionHashes, client.CurrentJob.Coinbase, client.CurrentJob.CoinbaseSize, merkleRoot);
-	
-
-	memcpy(work.Blob + 36, client.CurrentJob.MerkleRoot.data, 32);
+	memcpy(work.Blob + 36, merkleRoot.data, 32);
 
 	memcpy(work.Blob + 68, client.CurrentJob.Ntime, 4);
 	memcpy(work.Blob + 72, client.CurrentJob.Nbits, 4);
@@ -116,10 +111,35 @@ bool StratumProtocol::HandleMethod(MinerClient& client, string s)
 
 	doc.Parse(s.c_str());
 
+	if (doc.HasMember("result"))
+	{
+		const int returnId = doc["id"].GetInt();
 
-	if (doc.HasMember("method"))
+		if (client.Stratum.IdMap.count(returnId) > 0)
+		{
+			if (client.Stratum.IdMap[returnId] == "mining.authorize")
+			{
+				return StratumHelpers::StratumHandleLogin(client, doc);
+			}
+
+			if (client.Stratum.IdMap[returnId] == "mining.submit" && client.LoggedIn) //No use of checkign this
+			{
+				return StratumHelpers::StratumHandleShareResponse(client, doc);
+			}
+
+			printf("Found in return map but no matching clause: %s, ignoring", client.Stratum.IdMap[returnId].c_str());
+		}
+		printf("Unknown return sent by stratum server : %u, ignoring\n", returnId);
+
+	}
+	else if (!client.LoggedIn)
+	{
+		client.Stratum.PendingNotifications.push_back(s);
+	}
+	else if (doc.HasMember("method"))
 	{
 		const char* method = doc["method"].GetString();
+
 
 		if (!stricmp(method, "mining.notify"))
 		{
@@ -144,27 +164,9 @@ bool StratumProtocol::HandleMethod(MinerClient& client, string s)
 		}
 		printf("Unknown method sent by stratum server : %s\n", method);
 	}
-	else if (doc.HasMember("result"))
-	{
-		const int returnId = doc["id"].GetInt();
 
-		if (client.Stratum.IdMap.count(returnId) > 0)
-		{
-			if (client.Stratum.IdMap[returnId] == "mining.authorize")
-			{
-				return StratumHelpers::StratumHandleLogin(client, doc);
-			}if (client.Stratum.IdMap[returnId] == "mining.submit")
-			{
-				return StratumHelpers::StratumHandleLogin(client, doc);
-			}
 
-			printf("Found in return map but no matching clause: %s, ignoring", client.Stratum.IdMap[returnId].c_str());
-		}
 
-		
-		printf("Unknown return sent by stratum server : %u, ignoring\n", returnId);
-	}
-	
 	return false;
 }
 
@@ -187,7 +189,7 @@ void StratumProtocol::StratumThread(MinerClient& client)
 	//We only want to connect one of the clients. Create a lock over here
 	if (!client.Connected)//Connect one
 	{
-		StratumNetwork::Connect(client);
+		StratumProtocol::Login(client);
 	}
 	uint32_t timerPrintDetails = GetTickCount() + 8000;
 
@@ -197,37 +199,46 @@ void StratumProtocol::StratumThread(MinerClient& client)
 		{
 			printf("Error in StratumProtocol::StratumThread, client is not conencted. Retrying in 10 seconds.\n");
 			Sleep(10*1000);
-			StratumNetwork::Connect(client);
+			StratumProtocol::Login(client);
 		}
 		else
 		{
 			string s;
 			if(!StratumNetwork::Receive(client, s))
 			{
-				printf("diconnected.. and reconnecting in 10 seconds.\n");
-				Sleep(10*1000);
-				StratumNetwork::Connect(client);
+				while (!client.Connected)
+				{
+					printf("diconnected.. and reconnecting in 10 seconds.\n");
+					Sleep(10 * 1000);
+					StratumProtocol::Login(client);
+				}
 				continue; // The client disconnected
 			}
 			if(s!= "" && !StratumProtocol::HandleMethod(client, s))
 			{
-				printf("StratumProtocol::StratumThread ignores unknown method.\n");
-
+				if (client.LoggedIn)
+					printf("StratumProtocol::StratumThread ignores unknown method.\n");
+				if (client.LogInFailed)
+				{
+					printf("Exiting due to login credentials being rejected\n");
+					return;
+				}
+				//else it may just be a pre message
 			}
 
 			 uint32_t passedSeconds = (uint32_t)time(NULL) - client.MiningStartTime;
 			 uint32_t currentTick = GetTickCount();
-
-			 if (passedSeconds > 5 && currentTick >= timerPrintDetails)
-			 {
-				 double hs = (double) client.TotalHashCount / passedSeconds;
-				 printf("Total Hash/s is %f\n", hs);
-				 timerPrintDetails = currentTick + 8000;
-				 
-			 }
-			 if (!HandleShares())
-			 {
-				 printf("Error occured while submitting share.\n");
+			 if (client.LoggedIn){
+				 if (passedSeconds > 5 && currentTick >= timerPrintDetails)
+				 {
+					 double hs = (double)client.TotalHashCount / passedSeconds;
+					 printf("Total Hash/s is %f; Shares Accepted - %u; Shares Rejected - %u; Time since mining in seconds - %u\n", hs, client.SharesAccepted, client.SharesRejected, passedSeconds);
+					 timerPrintDetails = currentTick + 8000;
+				 }
+				 if (!HandleShares(client))
+				 {
+					 printf("Error occured while submitting share.\n");
+				 }
 			 }
 
 		}

@@ -10,6 +10,7 @@ public:
 	static bool HexToBinary(char* hex, char* binary, size_t len);
 	static bool BinaryToHex(char* hex, char* binary, size_t len);
 	static uint32_t BigEndian32Decode(const void *buf);
+	static void BigEndian32Encode(char  *pp, uint32_t x);
 	static bool GenerateExtraNonce( char* nonce, size_t len);
 };
 
