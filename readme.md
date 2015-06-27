@@ -30,7 +30,7 @@ Credits: archit, pooler(scrypt mining code), jh00(inspired from xptMiner)
 The project was built using Visual Studio 2013, it may compile in earlier versions but I can not gaurante. Assembly modules have been compiled using GCC on MingW64. Also rapidjson is needed as an additional dependency.
 
 ###License
-The files under crypto folder originally belong to pooler's cpuminer and hence are covered under GPLv2. Everything else can be used in any way you like, just give me the due credits. 
+The files under crypto and assembly folder originally belong to pooler's cpuminer and hence are covered under GPLv2. Everything else can be used in any way you like, just give me the due credits. 
 
 
 
