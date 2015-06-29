@@ -108,7 +108,7 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 	{
 		printf("Error in StratumHelpers::StratumNotify, invalid number of parameters supplied by server.");
 	}
-	EnterCriticalSection(&client.cs_Job);
+	ThreadLock::Enter(client.cs_Job);
 	client.CurrentJob.CoinbaseSize = 2;
 	client.CurrentJob.Id = params[0u].GetString();
 
@@ -162,8 +162,7 @@ bool StratumHelpers::StratumNotify(MinerClient& client, Document& s)
 		memcpy(h.data, c, 32);
 		client.CurrentJob.TransactionHashes.push_back(h);
 	}
-
-	LeaveCriticalSection(&client.cs_Job);
+	ThreadLock::Leave(client.cs_Job);
 	return true;
 }
  

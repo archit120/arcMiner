@@ -22,9 +22,8 @@ bool StratumNetwork::Connect(MinerClient& client)
 	client.CurrentJob = {};
 	client.WorkAvailaible = false;
 
-	InitializeCriticalSection(&client.cs_Job);
-	InitializeCriticalSection(&client.Stratum.cs_share);
-
+	ThreadLock::Initialize(client.cs_Job);
+	ThreadLock::Initialize(client.Stratum.cs_share);
 
 	if(!NetworkHelpers::Connect(client))
 		return false;

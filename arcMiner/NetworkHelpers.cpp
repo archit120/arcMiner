@@ -3,6 +3,7 @@
 
 bool NetworkHelpers::Start()
 {	
+#ifdef _MSC_VER
 	WSADATA wsa;
 	int r = WSAStartup(MAKEWORD(2,2),&wsa);
 	if(!r)
@@ -10,16 +11,22 @@ bool NetworkHelpers::Start()
 
 	cout << "NetworkHelpers::Start() failed with : " << WSAGetLastError() << endl;
 	return false;
+#else
+	return true;
+#endif
 }
 
 bool NetworkHelpers::GetIpFromUrl(char* URL, IP& ip)
 {
+	//Already compatible with linux?
+
 	hostent* hostInfo = gethostbyname(URL);
 	if( hostInfo == NULL )
 	{
 		cout << "Cannot resolve '" << URL << "'. Is it a valid URL?\n" << endl;
 		return false;
 	} 
+	
 	void** ipListPtr = (void**)hostInfo->h_addr_list;
 	uint32_t ipu = 0xFFFFFFFF;
 	if( ipListPtr[0] )
@@ -36,12 +43,17 @@ bool NetworkHelpers::OpenConnection()
 }
 bool NetworkHelpers::OpenConnection(SOCKET& s, RequestTarget target)
 {
+	//Should just work again
 	s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 	if( s == SOCKET_ERROR )
 	{
 		cout << "NetworkHelpers::OpenConnection failed in creating socket with " << WSAGetLastError() << endl;
 		return false;
 	}
+#ifndef _MSC_VER
+#define SOCKADDR_IN sockaddr_in
+#endif
+
 	SOCKADDR_IN addr;
 	memset(&addr,0,sizeof(SOCKADDR_IN));
 	addr.sin_family=AF_INET;
@@ -49,11 +61,13 @@ bool NetworkHelpers::OpenConnection(SOCKET& s, RequestTarget target)
 	addr.sin_addr.s_addr=inet_addr(target.Ip.data);
 
 	int r = connect(s,(SOCKADDR*)&addr,sizeof(SOCKADDR_IN));
+#ifdef _MSC_VER
 	if(r)
 	{		
 		cout << "NetworkHelpers::OpenConnection failed in connecting socket with " << WSAGetLastError() << endl;
 		return false;
 	}
+#endif
 	return true;
 }
 
@@ -67,10 +81,16 @@ bool NetworkHelpers::Connect(MinerClient& client)
 		return true;
 	if(!OpenConnection(client.ClientSocket, client.Target))
 		return false;
-
+#ifdef _MSC_VER
 	unsigned int nonblocking=1;
 	unsigned int cbRet;
 	WSAIoctl(client.ClientSocket, FIONBIO, &nonblocking, sizeof(nonblocking), NULL, 0, (LPDWORD)&cbRet, NULL, NULL);
+#else
+	int flags, err;
+	flags = fcntl(clientSocket, F_GETFL, 0);
+	flags |= O_NONBLOCK;
+	err = fcntl(clientSocket, F_SETFL, flags); //ignore errors for now..
+#endif
 
 	client.Connected = true;
 	
@@ -109,6 +129,7 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 		signed int r = recv(client.ClientSocket, c, toReceive, 0);
 		if( r <= 0 )
 		{
+#ifdef _MSC_VER
 			int e = WSAGetLastError();
 			// receive error, is it a real error or just because of non blocking sockets?
 			if( e != WSAEWOULDBLOCK )
@@ -118,6 +139,15 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 				client.LoggedIn = false;
 				return false;
 			}
+#else
+			if (errno != EAGAIN || r == 0)
+			{
+				xprintf("NetworkHelpers::Receive failed with %d\n", e);
+				client.Connected = false;
+				client.LoggedIn = false;
+				return false;
+			}
+#endif
 			return true;
 		}
 		s.append(c);

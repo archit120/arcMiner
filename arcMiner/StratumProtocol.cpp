@@ -18,9 +18,9 @@ bool StratumProtocol::AddShares(StratumShare &share)
 }
 bool StratumProtocol::AddShares(StratumShare &share,MinerClient& client)
 {
-	EnterCriticalSection(&client.Stratum.cs_share);
+	ThreadLock::Enter(client.Stratum.cs_share);
 	client.Stratum.Shares.push_back(share);
-	LeaveCriticalSection(&client.Stratum.cs_share);
+	ThreadLock::Leave(client.Stratum.cs_share);
 
 	return true;
 }
@@ -34,7 +34,7 @@ bool StratumProtocol::HandleShares(MinerClient& client)
 	if (client.Stratum.Shares.size() > 0)
 	{
 		vector<StratumShare> shares;
-		EnterCriticalSection(&client.Stratum.cs_share);
+		ThreadLock::Enter(client.Stratum.cs_share);
 		int size = client.Stratum.Shares.size();
 		for (int i = size - 1; i >= 0; i--)
 		{
@@ -42,7 +42,7 @@ bool StratumProtocol::HandleShares(MinerClient& client)
 			shares.push_back(share);
 			client.Stratum.Shares.pop_back();
 		}
-		LeaveCriticalSection(&client.Stratum.cs_share);
+		ThreadLock::Leave(client.Stratum.cs_share);
 		for (int i = 0; i < shares.size(); i++)
 		{
 			StratumShare s = shares[i];
@@ -71,7 +71,7 @@ bool StratumProtocol::GetWork(WorkBlob& work)
 bool StratumProtocol::GetWork(MinerClient& client, WorkBlob& work)
 {
 	//we will focus on the locks later though
-	EnterCriticalSection(&client.cs_Job);
+	ThreadLock::Enter(client.cs_Job);
 	//assert(client.CurrentJob.Id.length());
 	memset(work.Blob, 0, 128);
 
@@ -96,7 +96,7 @@ bool StratumProtocol::GetWork(MinerClient& client, WorkBlob& work)
 
 	memcpy(work.ShareTarget.data, client.CurrentJob.ShareTarget.data, 32);
 	work.ShareTarget = StratumHelpers::TargetFromDifficulty(32, Scrypt);
-	LeaveCriticalSection(&client.cs_Job);
+	ThreadLock::Leave(client.cs_Job);
 	return true;
 }
 
@@ -243,7 +243,7 @@ void StratumProtocol::StratumThread(MinerClient& client)
 
 		}
 
-		Sleep(50); //50ms sleep
+		Sleep(100); //50ms sleep
 	}
 }
 

@@ -9,6 +9,7 @@
 #include <map>
 #include <thread>
 
+#if defined(_MSC_VER)
 #pragma comment(lib,"Ws2_32.lib")
 #include <Winsock2.h>
 #include <ws2tcpip.h>
@@ -20,8 +21,21 @@
 #include "crypto\scrypt.h"*/
 
 #include "Crypto\CryptConfig.h"
+#else
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
 
-#include "AppLog.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h> 
+#include <pthread.h>
+
+#include "Crypto/CryptConfig.h"
+
+#define SOCKET int
+
+#endif
 
 #define MinerVersion "arcMiner alpha"
 
@@ -33,10 +47,12 @@ using namespace std;
 using namespace rapidjson;
 
 //Stupid hack?!
+#ifndef snprintf 
 #define snprintf c99_snprintf
 
 inline int c99_vsnprintf(char* str, size_t size, const char* format, va_list ap)
 {
+	
 	int count = -1;
 
 	if (size != 0)
@@ -59,6 +75,22 @@ inline int c99_snprintf(char* str, size_t size, const char* format, ...)
 
 	return count;
 }
+#endif
+
+
+struct ThreadLockSection{
+#if defined(_MSC_VER)
+	CRITICAL_SECTION cs;
+#else
+	pthread_mutex_t cs;
+#endif
+
+	bool Initialized;
+};
+
+
+#include "AppLog.h"
+#include "ThreadLock.h"
 
 enum Protocol{
 	Stratum,
@@ -104,7 +136,7 @@ struct StratumClient
 	size_t ENonce2Size;
 	char Nonce1[8];
 	volatile int Nonce1Size;
-	CRITICAL_SECTION cs_share;
+	ThreadLockSection cs_share;
 	vector<StratumShare> Shares;
 	volatile double Difficulty;
 	volatile double NextDifficulty;
@@ -169,7 +201,7 @@ struct MinerClient
 	 WorkBlob Work;
 	 Job CurrentJob;
 	 Protocol CurrentProtocol;
-	 CRITICAL_SECTION cs_Job;
+	 ThreadLockSection cs_Job;
 	 volatile uint64_t TotalHashCount;
 	 volatile uint64_t TotalCollisionCount;
 	 volatile uint64_t UniqueGenerator;
