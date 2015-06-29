@@ -34,7 +34,7 @@ Credits: archit, pooler(scrypt mining code), jh00(inspired from xptMiner)
 The project was built using Visual Studio 2013, it may compile in earlier versions but I can not gaurante. Assembly modules have been compiled using GCC on MingW64. Also rapidjson is needed as an additional dependencybut has been included with this distribution.
 
 ###Linux
-Tested only on G++ 4.8.4 but should work on any version capable of supporting C++11. Just enter make and the project should compile. Binaries are found in build folder.
+Tested only on G++ 4.8.4 but should work on any version capable of supporting C++11. Just enter make and the project should compile. Binary named arcMinerd. 
 
 ###License
 The files under crypto and assembly folder originally belong to pooler's cpuminer and hence are covered under GPLv2. Everything else can be used in any way you like, just give me the due credits. 
