@@ -13,12 +13,7 @@
 #include <string.h>
 #include <inttypes.h>
 
-#if defined(USE_ASM) && \
-	(defined(__x86_64__) || \
-	 (defined(__arm__) && defined(__APCS_32__)) || \
-	 (defined(__powerpc__) || defined(__ppc__) || defined(__PPC__)))
 #define EXTERN_SHA256
-#endif
 
 static const uint32_t sha256_h[8] = {
 	0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
