@@ -45,13 +45,15 @@ bool NetworkHelpers::OpenConnection(SOCKET& s, RequestTarget target)
 {
 	//Should just work again
 	s=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
+#ifdef _MSC_VER
 	if( s == SOCKET_ERROR )
 	{
 		cout << "NetworkHelpers::OpenConnection failed in creating socket with " << WSAGetLastError() << endl;
 		return false;
 	}
-#ifndef _MSC_VER
+#else
 #define SOCKADDR_IN sockaddr_in
+#define SOCKADDR sockaddr
 #endif
 
 	SOCKADDR_IN addr;
@@ -87,9 +89,9 @@ bool NetworkHelpers::Connect(MinerClient& client)
 	WSAIoctl(client.ClientSocket, FIONBIO, &nonblocking, sizeof(nonblocking), NULL, 0, (LPDWORD)&cbRet, NULL, NULL);
 #else
 	int flags, err;
-	flags = fcntl(clientSocket, F_GETFL, 0);
+	flags = fcntl(client.ClientSocket, F_GETFL, 0);
 	flags |= O_NONBLOCK;
-	err = fcntl(clientSocket, F_SETFL, flags); //ignore errors for now..
+	err = fcntl(client.ClientSocket, F_SETFL, flags); //ignore errors for now..
 #endif
 
 	client.Connected = true;
@@ -108,7 +110,11 @@ bool NetworkHelpers::Send(MinerClient client, string s)
 	int bytes = send(client.ClientSocket, s.c_str(), s.length(), 0);
 	if(bytes> 0)
 		return true;
+#ifdef _MSC_VER
 	cout << "NetworkHelpers::Send failed with " << WSAGetLastError() << endl;
+#else
+	cout << "NetworkHelpers::Send failed" << endl;
+#endif
 	return false;
 }
 
@@ -142,7 +148,7 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 #else
 			if (errno != EAGAIN || r == 0)
 			{
-				xprintf("NetworkHelpers::Receive failed with %d\n", e);
+				xprintf("NetworkHelpers::Receive failed with %d\n", errno);
 				client.Connected = false;
 				client.LoggedIn = false;
 				return false;

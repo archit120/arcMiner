@@ -50,7 +50,7 @@ bool StratumProtocol::HandleShares(MinerClient& client)
 			char buffer1[9]; Helpers::BinaryToHex(buffer1, s.ENonce2, 4);
 			char buffer2[9]; Helpers::BinaryToHex(buffer2, s.Nonce, 4);
 			char buffer3[9]; Helpers::BinaryToHex(buffer3, s.Ntime, 4);
-			sprintf(cShare, "{ \"params\":[\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"], \"id\" : %u, \"method\" : \"mining.submit\" }", client.Username,s.Id.c_str(), buffer1, buffer3, buffer2, client.Stratum.Id);
+			sprintf(cShare, "{ \"params\":[\"%s\", \"%s\", \"%s\", \"%s\", \"%s\"], \"id\" : %u, \"method\" : \"mining.submit\" }", client.Username.c_str(),s.Id.c_str(), buffer1, buffer3, buffer2, client.Stratum.Id);
 
 			client.Stratum.IdMap.insert(pair<int, string>(client.Stratum.Id, "mining.submit"));
 			client.Stratum.Id++;

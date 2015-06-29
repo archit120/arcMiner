@@ -70,7 +70,7 @@ bool StratumHelpers::GenerateLoginString(string& s)
 bool StratumHelpers::GenerateLoginString(MinerClient& client,string &s)
 {
 	char cLogin[128];
-	sprintf(cLogin, "{\"params\": [\"%s\", \"%s\"], \"id\": %u, \"method\": \"mining.authorize\"}", client.Username, client.Password, client.Stratum.Id);
+	sprintf(cLogin, "{\"params\": [\"%s\", \"%s\"], \"id\": %u, \"method\": \"mining.authorize\"}", client.Username.c_str(), client.Password.c_str(), client.Stratum.Id);
 	s=cLogin;
 	client.Stratum.IdMap.insert(pair<int, string>(client.Stratum.Id, "mining.authorize"));
 	client.Stratum.Id++;

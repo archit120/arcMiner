@@ -9,6 +9,12 @@
 #include <map>
 #include <thread>
 
+#include <chrono>
+#include <thread>
+
+//Cross platform sleep
+
+
 #if defined(_MSC_VER)
 #pragma comment(lib,"Ws2_32.lib")
 #include <Winsock2.h>
@@ -30,10 +36,16 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 #include <pthread.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
 
 #include "Crypto/CryptConfig.h"
 
+#define Sleep(x) usleep((x)*1000)
+#define _strdup strdup;
 #define SOCKET int
+#define stricmp strcasecmp
 
 #endif
 
@@ -47,7 +59,7 @@ using namespace std;
 using namespace rapidjson;
 
 //Stupid hack?!
-#ifndef snprintf 
+#ifdef _MSC_VER 
 #define snprintf c99_snprintf
 
 inline int c99_vsnprintf(char* str, size_t size, const char* format, va_list ap)

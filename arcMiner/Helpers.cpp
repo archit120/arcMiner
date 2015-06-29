@@ -5,8 +5,7 @@ bool Helpers::PrintBinaryInHex(char* binary, size_t len)
 {
 	char* hex = (char *)malloc(len * 2 + 1);
 	Helpers::BinaryToHex(hex, binary, len);
-	printf(hex);
-	printf("\n");
+	printf("%s\n",hex);
 	free(hex);
 	return true;
 }

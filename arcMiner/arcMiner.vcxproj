@@ -104,6 +104,11 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)$(ProjectName)\include</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AppLog.cpp" />
     <ClCompile Include="arcMiner.cpp" />
@@ -115,6 +120,7 @@
     <ClCompile Include="StratumHelpers.cpp" />
     <ClCompile Include="StratumNetwork.cpp" />
     <ClCompile Include="StratumProtocol.cpp" />
+    <ClCompile Include="ThreadLock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppLog.h" />
@@ -126,6 +132,7 @@
     <ClInclude Include="StratumHelpers.h" />
     <ClInclude Include="StratumNetwork.h" />
     <ClInclude Include="StratumProtocol.h" />
+    <ClInclude Include="ThreadLock.h" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="Assembly\scrypt-x64.obj" />
