@@ -148,7 +148,7 @@ bool NetworkHelpers::Receive(MinerClient& client, int bytesToReceive,string& s)
 #else
 			if (errno != EAGAIN || r == 0)
 			{
-				xprintf("NetworkHelpers::Receive failed with %d\n", errno);
+				printf("NetworkHelpers::Receive failed with %d\n", errno);
 				client.Connected = false;
 				client.LoggedIn = false;
 				return false;

@@ -43,9 +43,10 @@
 #include "Crypto/CryptConfig.h"
 
 #define Sleep(x) usleep((x)*1000)
-#define _strdup strdup;
+#define _strdup strdup
 #define SOCKET int
 #define stricmp strcasecmp
+#define GetTickCount() (uint32_t) (time(NULL) - 1383638888) * 1000 // A quick hack for time_t overflow
 
 #endif
 

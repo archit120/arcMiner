@@ -1,5 +1,8 @@
 #ifndef _H_CRYPT_CONFIG 
 #define _H_CRYPT_CONFIG
+
+#include <stdint.h>
+
 #define USE_ASM 1
 #define __x86_64__ 1
 #define USE_AVX2 1

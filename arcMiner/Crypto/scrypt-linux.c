@@ -27,8 +27,7 @@
  * online backup system.
  */
 
-#include "cpuminer-config.h"
-#include "miner.h"
+#include "CryptConfig.h"
 
 #include <stdlib.h>
 #include <string.h>

@@ -20,6 +20,6 @@ public:
 
 };
 
-CONST int MaxPacketSizeStratum = 1024*2*2;
+const int MaxPacketSizeStratum = 1024*2*2;
 
 #endif
